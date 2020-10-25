@@ -19,14 +19,7 @@ defmodule TestGame do
     :wxPanel.connect(panel, :key_down)
 
     :wxFrame.show(frame)
-    grid = [
-      [2, 0, 0, 0],
-      [0, 0, 2, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0]
-    ]
-
-    state = %{panel: panel, grid: grid}
+    state = %{panel: panel, grid: add_block()}
     {frame, state}
   end
 
@@ -39,27 +32,33 @@ defmodule TestGame do
     {:stop, :normal, state}
   end
   def handle_event({:wx, _, _, _, {:wxKey, :key_down, _, _, kc, _, _, _, _, _, _, _, _}}, state = %{panel: panel, grid: grid}) do
-    Map.put_new(state, :grid, case kc do
+    {:noreply, Map.put(state, :grid, case kc do
       83 -> move_rects(grid, :down)  |> draw_rects(panel)
       65 -> move_rects(grid, :left)  |> draw_rects(panel)
       87 -> move_rects(grid, :up)    |> draw_rects(panel)
       68 -> move_rects(grid, :right) |> draw_rects(panel)
       _ -> grid
-    end)
-    {:noreply, state}
+    end)}
+  end
+
+  def add_block(grid\\List.duplicate(0, 16)) do
+    new_grid = List.replace_at(grid, Enum.filter(0..15, &Enum.at(grid, &1) == 0) |> Enum.random(), 2)
+    if Enum.any?(new_grid, &(&1 == 0)), do: new_grid, else: List.duplicate(0, 16) |> add_block()
   end
 
   def move_rects(grid, :down) do
-    grid
+    add_block(grid)
   end
   def move_rects(grid, :up) do
-    grid
+    add_block(grid)
   end
   def move_rects(grid, :left) do
-    grid
+    add_block(grid)
   end
   def move_rects(grid, :right) do
-    grid
+    Enum.reduce(15..0, grid, fn x, grid ->
+      grid
+    end) |> add_block()
   end
 
   def draw_rects(grid, panel) do
@@ -70,11 +69,7 @@ defmodule TestGame do
     :wxDC.clear(dc)
     :wxBrush.setColour(brush, {255, 0, 255, 255})
     :wxPaintDC.setBrush(dc, brush)
-    Enum.each(0..3, fn x ->
-      Enum.each(0..3, fn y ->
-        if Enum.at(Enum.at(grid, x), y) != 0, do: :wxPaintDC.drawRectangle(dc, {(1 + x) * 100, (1 + y) * 100, 100, 100})
-      end)
-    end)
+    Enum.each(0..15, &(if Enum.at(grid, &1) != 0, do: :wxPaintDC.drawRectangle(dc, {(1 + div(&1, 4)) * 100, (1 + rem(&1, 4)) * 100, 100, 100})))
     grid
   end
 
