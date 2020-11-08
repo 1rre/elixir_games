@@ -1,0 +1,1 @@
+Script.main(System.argv)
