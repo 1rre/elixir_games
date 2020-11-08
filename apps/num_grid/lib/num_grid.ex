@@ -41,11 +41,7 @@ defmodule Games.NumGrid do
     end)}
 
   def mergeable(grid) do
-    Enum.any?(0..3, fn i ->
-      Enum.any?(0..3, fn j ->
-        Enum.at(grid, i + 4 * j) == Enum.at(grid, i + 4 * (j + 1)) || Enum.at(grid, i + 4 * j) == Enum.at(grid, i + 1 + 4 * j)
-      end)
-    end)
+    Enum.any?(0..14, &Enum.at(grid, &1) == Enum.at(grid, &1 + 1) || Enum.at(grid, &1) == Enum.at(grid, &1 + 4))
   end
   def add_block(grid\\List.duplicate(0, 16)) do
     new_grid = List.replace_at(grid, Enum.filter(0..15, &Enum.at(grid, &1) == 0) |> Enum.random(), 2)
